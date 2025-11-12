@@ -1,24 +1,62 @@
 package main
 
 import (
+	"bufio"
+	"fmt"
+	"os"
 	"strings"
-	"unicode"
 )
 
-func cleanInput(text string) []string {
-	text = strings.TrimSpace(text)
-	text = strings.ToLower(text)
+func startRepl() {
+	reader := bufio.NewScanner(os.Stdin)
+	for {
+		fmt.Print("Pokedex > ")
+		reader.Scan()
 
-	cleaned := strings.Map(func(r rune) rune {
-		if unicode.IsLetter(r) || unicode.IsSpace(r) {
-			return r
+		words := cleanInput(reader.Text())
+		if len(words) == 0 {
+			continue
 		}
-		return -1
-	}, text)
-	//remove all the non-alphanumeric characters
 
-	if cleaned == "" {
-		return []string{}
+		commandName := words[0]
+
+		command, exists := getCommands()[commandName]
+		if exists {
+			err := command.callback()
+			if err != nil {
+				fmt.Println(err)
+			}
+			continue
+		} else {
+			fmt.Println("Unknown command")
+			continue
+		}
 	}
-	return strings.Fields(cleaned)
+}
+
+func cleanInput(text string) []string {
+	output := strings.ToLower(text)
+	words := strings.Fields(output)
+	return words
+}
+
+type cliCommand struct {
+	name        string
+	description string
+	callback    func() error
+}
+
+func getCommands() map[string]cliCommand {
+	return map[string]cliCommand{
+		"help": {
+			name:        "help",
+			description: "Displays a help message",
+			callback:    commandHelp,
+		},
+		"exit": {
+			name:        "exit",
+			description: "Exit the Pokedex",
+			callback:    commandExit,
+		},
+	}
 }
