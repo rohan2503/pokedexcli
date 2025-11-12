@@ -1,0 +1,5 @@
+# Ignore compiled binary
+pokedexcli
+
+# Ignore logs
+repl.log
